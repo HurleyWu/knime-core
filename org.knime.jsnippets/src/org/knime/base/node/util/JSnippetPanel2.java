@@ -55,7 +55,6 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -69,6 +68,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
 
 import org.fife.ui.autocomplete.AutoCompletion;
@@ -77,6 +77,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
@@ -177,13 +178,16 @@ public class JSnippetPanel2 extends JPanel {
 
         ExpressionMenuBar() {
             super();
-            m_columnsMenu = new MenuPlain("+col");
-            m_columnsMenu = new MenuPlain("+col");
-            m_columnsMenu.setMnemonic(KeyEvent.VK_C);
-            m_flowVarsMenu = new MenuPlain("+fvar");
-            m_flowVarsMenu.setMnemonic(KeyEvent.VK_V);
-            m_functionsMenu = new MenuPlain("+func");
-            m_functionsMenu.setMnemonic(KeyEvent.VK_F);
+            m_columnsMenu = new MenuPlain("col");
+            m_columnsMenu.setIcon(SharedIcons.ADD_PLUS.get());
+            //TODO allow arrow traversal for menuItems
+//            m_columnsMenu.setMnemonic(KeyEvent.VK_C);
+            m_flowVarsMenu = new MenuPlain("fvar");
+            m_flowVarsMenu.setIcon(SharedIcons.ADD_PLUS.get());
+//            m_flowVarsMenu.setMnemonic(KeyEvent.VK_V);
+            m_functionsMenu = new MenuPlain("func");
+            m_functionsMenu.setIcon(SharedIcons.ADD_PLUS.get());
+//            m_functionsMenu.setMnemonic(KeyEvent.VK_F);
             add(m_columnsMenu);
             add(m_flowVarsMenu);
             add(m_functionsMenu);
@@ -415,6 +419,12 @@ public class JSnippetPanel2 extends JPanel {
             m_expEdit.requestFocus();
     }
 
+    /**
+     * @see {@link JSnippetPanel#update(String, DataTableSpec, Map)}
+     * @param expression
+     * @param spec
+     * @param flowVariables
+     */
     public void update(final String expression, final DataTableSpec spec, final Map<String, FlowVariable> flowVariables) {
         // we have Expression.VERSION_2X
         final String[] expressions = new String[] {Expression.ROWID, Expression.ROWINDEX, Expression.ROWCOUNT};
@@ -532,5 +542,9 @@ public class JSnippetPanel2 extends JPanel {
 
         setExpEdit(textArea);
         return textArea;
+    }
+
+    public void setDocumentListener(final DocumentListener dl) {
+        m_expEdit.getDocument().addDocumentListener(dl);
     }
 }
