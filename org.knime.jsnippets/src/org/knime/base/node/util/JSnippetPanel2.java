@@ -91,6 +91,9 @@ public class JSnippetPanel2 extends JPanel {
     private KnimeCompletionProvider m_completionProvider;
     // MenuBar to add columns, flow variables and functions
     private ExpressionMenuBar m_menuBar;
+    private MenuPlain m_flowVarsList;
+    private MenuPlain m_colList;
+    private MenuPlain m_functions;
     private ManipulatorProvider m_manipProvider;
     private boolean m_showColumns;
     private boolean m_showFlowVariables;
@@ -261,8 +264,7 @@ public class JSnippetPanel2 extends JPanel {
     /**
      * @see JSnippetPanel
      */
-    public JSnippetPanel2(final ManipulatorProvider manipulatorProvider,
-        final KnimeCompletionProvider completionProvider) {
+    public JSnippetPanel2(final ManipulatorProvider manipulatorProvider, final KnimeCompletionProvider completionProvider) {
         this(manipulatorProvider, completionProvider, true);
     }
 
