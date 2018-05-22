@@ -56,6 +56,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
@@ -72,6 +74,7 @@ import javax.swing.text.JTextComponent;
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.workflow.FlowVariable;
@@ -86,9 +89,8 @@ public class JSnippetPanel2 extends JPanel {
 
     private JTextComponent m_expEdit;
     private KnimeCompletionProvider m_completionProvider;
-    private MenuPlain m_flowVarsList;
-    private MenuPlain m_colList;
-    private MenuPlain m_functions;
+    // MenuBar to add columns, flow variables and functions
+    private ExpressionMenuBar m_menuBar;
     private ManipulatorProvider m_manipProvider;
     private boolean m_showColumns;
     private boolean m_showFlowVariables;
@@ -145,6 +147,113 @@ public class JSnippetPanel2 extends JPanel {
         MenuItemPlain(final String s) {
             super(s);
             setFont(new Font(getFont().getName(), Font.PLAIN, getFont().getSize()));
+            addActionListener(e -> {
+
+            });
+        }
+
+    }
+
+    /**
+     * TODO
+     */
+    private class ExpressionMenuBar extends JMenuBar {
+
+        /* Menus */
+        private MenuPlain m_columnsMenu;
+        private MenuPlain m_flowVarsMenu;
+        private MenuPlain m_functionsMenu;
+        /* Lists of icons */
+        private ArrayList<Object> m_columnsList = new ArrayList<Object>();
+        private ArrayList<FlowVariable> m_flowVarsList = new ArrayList<FlowVariable>();
+        private ArrayList<String> m_functionsList = new ArrayList<String>();
+        /* Constants for menus*/
+        private static final String COLUMNS = "columns";
+        private static final String FLOWVARS = "flowvars";
+        private static final String FUNCTIONS = "functions";
+
+        ExpressionMenuBar() {
+            super();
+            m_columnsMenu = new MenuPlain("+col");
+            m_columnsMenu = new MenuPlain("+col");
+            m_columnsMenu.setMnemonic(KeyEvent.VK_C);
+            m_flowVarsMenu = new MenuPlain("+fvar");
+            m_flowVarsMenu.setMnemonic(KeyEvent.VK_V);
+            m_functionsMenu = new MenuPlain("+func");
+            m_functionsMenu.setMnemonic(KeyEvent.VK_F);
+            add(m_columnsMenu);
+            add(m_flowVarsMenu);
+            add(m_functionsMenu);
+        }
+
+        /**
+         * Sets the menu entries for the columns menu
+         * @param spec DataTableSpec containing the columns
+         * @param list additional list with values, e.g. ROWID
+         */
+        private void updateColumns(final DataTableSpec spec, final String[] list) {
+            m_columnsList.clear();
+            m_columnsMenu.removeAll();
+            for (String s : list) {
+                m_columnsList.add(s);
+                MenuItemPlain menuItem = new MenuItemPlain(s);
+                menuItem.addActionListener(e -> onSelectionInColumnList(s));
+                m_columnsMenu.add(menuItem);
+            }
+            for (int i = 0; i < spec.getNumColumns(); i++) {
+                DataColumnSpec colSpec = spec.getColumnSpec(i);
+                // TODO render colspec correctly
+                m_columnsList.add(colSpec);
+                MenuItemPlain menuItem = new MenuItemPlain(colSpec.toString());
+                menuItem.addActionListener(e -> onSelectionInColumnList(colSpec));
+                m_columnsMenu.add(menuItem);
+            }
+
+        }
+
+        /**
+         * Sets the menu entries for the flow variables menu
+         * @param list list of entries to replace the current entries
+         */
+        private void updateFlowVars(final Collection<FlowVariable> list) {
+            m_flowVarsList.clear();
+            m_flowVarsMenu.removeAll();
+            for (FlowVariable v : list) {
+                m_flowVarsList.add(v);
+                // TODO render flow variable correctly
+                MenuItemPlain menuItem = new MenuItemPlain(v.toString());
+                menuItem.addActionListener(e -> onSelectionInVariableList(v));
+                m_flowVarsMenu.add(menuItem);
+            }
+        }
+
+        /**
+         * Sets the menu entries for the functions menu
+         * @param list list of entries to replace the current entries
+         */
+        private void updateFunctions(final ArrayList<String> list) {
+            m_functionsList.clear();
+            m_functionsMenu.removeAll();
+            for (String s : list) {
+                m_functionsList.add(s);
+                MenuItemPlain menuItem = new MenuItemPlain(s);
+                menuItem.addActionListener(e -> onSelectionInManipulatorList(s));
+                m_functionsMenu.add(menuItem);
+            }
+        }
+
+        /**
+         * @return
+         */
+        public ArrayList<FlowVariable> getFlowVarsList() {
+            return m_flowVarsList;
+        }
+
+        /**
+         * @return
+         */
+        public ArrayList<Object> getColList() {
+            return m_columnsList;
         }
 
     }
@@ -153,7 +262,7 @@ public class JSnippetPanel2 extends JPanel {
      * @see JSnippetPanel
      */
     public JSnippetPanel2(final ManipulatorProvider manipulatorProvider,
-                         final KnimeCompletionProvider completionProvider) {
+        final KnimeCompletionProvider completionProvider) {
         this(manipulatorProvider, completionProvider, true);
     }
 
@@ -191,20 +300,8 @@ public class JSnippetPanel2 extends JPanel {
         c.gridwidth = 1;
         c.insets = new Insets(0, 0, 4, 4);
         /* Menubar */
-        JMenuBar menuBar = new JMenuBar();
-        m_colList = new MenuPlain("+col");
-        m_colList.setMnemonic(KeyEvent.VK_C);
-        m_colList.add(new MenuItemPlain("No columns available."));
-        m_flowVarsList = new MenuPlain("+fvar");
-        m_flowVarsList.setMnemonic(KeyEvent.VK_V);
-        m_flowVarsList.add(new MenuItemPlain("No flow variables available."));
-        m_functions = new MenuPlain("+func");
-        m_functions.setMnemonic(KeyEvent.VK_F);
-        m_functions.add(new MenuItemPlain("No functions available."));
-        menuBar.add(m_colList);
-        menuBar.add(m_flowVarsList);
-        menuBar.add(m_functions);
-        editorPanel.add(menuBar, c);
+        m_menuBar = new ExpressionMenuBar();
+        editorPanel.add(m_menuBar, c);
         c.gridx = 0;
         c.gridy++;
         c.gridwidth = 3;
@@ -229,27 +326,91 @@ public class JSnippetPanel2 extends JPanel {
     }
 
     /**
-     * @return
+     * Returns the expression in the editor.
+     *
+     * @return a string containing the expression
      */
     public String getExpression() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_expEdit.getText();
     }
 
     /**
-     * @param selected
+     * Method that is being called by listener when an object in the column menu has been selected.
+     *
+     * @param selected The selected object.
+     * @since 3.6
      */
     protected void onSelectionInColumnList(final Object selected) {
-        // TODO Auto-generated method stub
-
+        String enter;
+        if (selected instanceof String) {
+            enter = "$$" + selected + "$$";
+        } else {
+            DataColumnSpec colSpec = (DataColumnSpec)selected;
+            String name = colSpec.getName().replace("$", "\\$");
+            enter = m_completionProvider.escapeColumnName(name);
+        }
+        m_expEdit.replaceSelection(enter);
+            m_expEdit.requestFocus();
     }
 
     /**
-     * @param selected
+     * Method that is being called by listener when an object in the variable list has been selected.
+     *
+     * @param selected The selected object.
+     * @since 3.6
      */
-    protected void onSelectionInVariableList(final Object selected) {
-        // TODO Auto-generated method stub
 
+    protected void onSelectionInVariableList(final Object selected) {
+        if (selected instanceof FlowVariable) {
+            FlowVariable v = (FlowVariable)selected;
+            String typeChar;
+            switch (v.getType()) {
+                case DOUBLE:
+                    typeChar = "D";
+                    break;
+                case INTEGER:
+                    typeChar = "I";
+                    break;
+                case STRING:
+                    typeChar = "S";
+                    break;
+                default:
+                    return;
+            }
+            String enter =
+                    m_completionProvider.escapeFlowVariableName(typeChar
+                            + v.getName()/*.replace("\\", "\\\\").replace("}", "\\}")*/);
+            m_expEdit.replaceSelection(enter);
+            m_expEdit.requestFocus();
+        }
+
+    }    /**
+     * Inserts text based on the selected manipulator.
+     *
+     * @param selected A {@link Manipulator}.
+     * @since 2.8
+     */
+    protected void onSelectionInManipulatorList(final Object selected) {
+        Manipulator manipulator = (Manipulator)selected;
+        String selectedString = m_expEdit.getSelectedText();
+        StringBuilder newStr = new StringBuilder(manipulator.getName());
+        newStr.append('(');
+        for (int i = 0; i < manipulator.getNrArgs(); i++) {
+            newStr.append(i > 0 ? ", " : "");
+            if (i == 0 && selectedString != null) {
+                newStr.append(selectedString);
+            }
+        }
+        newStr.append(')');
+
+        m_expEdit.replaceSelection(newStr.toString());
+        if (manipulator.getNrArgs() > 0 && selectedString == null) {
+            int caretPos = m_expEdit.getCaretPosition();
+            m_expEdit.setCaretPosition(1 + m_expEdit.getText().indexOf('(',
+                caretPos - newStr.toString().length()));
+        }
+
+            m_expEdit.requestFocus();
     }
 
     public void update(final String expression, final DataTableSpec spec, final Map<String, FlowVariable> flowVariables) {
@@ -267,37 +428,19 @@ public class JSnippetPanel2 extends JPanel {
         m_expEdit.setText(expression);
         m_expEdit.requestFocus();
 
-        m_colList.removeAll();
+        m_menuBar.updateColumns(spec, expressions);
+        m_menuBar.updateFlowVars(flowVariables.values());
 
-        // Columns list
-        // we have Expression.VERSION_2X
-        for (String exp : expressions) {
-            m_colList.add(new MenuItemPlain(exp));
-        }
-
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            DataColumnSpec colSpec = spec.getColumnSpec(i);
-            // TODO render colspec correctly
-            m_colList.add(new MenuItemPlain(colSpec.toString()));
-        }
         m_completionProvider.setColumns(spec);
-
-        // Flow variable list
-        m_flowVarsList.removeAll();
-        for (FlowVariable v : flowVariables.values()) {
-            // TODO render fvar correctly
-            m_flowVarsList.add(new MenuItemPlain(v.toString()));
-        }
         m_completionProvider.setFlowVariables(flowVariables.values());
-
     }
 
     /**
      * @param string
      */
-    public void setExpressions(final String string) {
-        // TODO Auto-generated method stub
-
+    public void setExpressions(final String expression) {
+        m_expEdit.setText(expression);
+        m_expEdit.requestFocus();
     }
 
     /**
@@ -320,8 +463,8 @@ public class JSnippetPanel2 extends JPanel {
      * @return the flowVarsList
      * @since 2.10
      */
-    protected MenuPlain getFlowVarsList() {
-        return m_flowVarsList;
+    protected ArrayList<FlowVariable> getFlowVarsList() {
+        return m_menuBar.getFlowVarsList();
     }
 
     /**
@@ -336,8 +479,8 @@ public class JSnippetPanel2 extends JPanel {
      * @return the colList
      * @since 2.10
      */
-    protected MenuPlain  getColList() {
-        return m_colList;
+    protected ArrayList<Object>  getColList() {
+        return m_menuBar.getColList();
     }
 /**
 	 * Sets the font weight of the passed component to plain.
