@@ -16,14 +16,14 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Jonathan Hale
  * @param <ThisType> Class which is implementing this interface.
  */
-public interface Source<ThisType extends Source> {
+public interface Source {
     /**
      * Parameters passed to a {@link CellValueProducer}, further specializing it to a specific input column.
      *
      * @author Jonathan Hale
      * @param <S> Type of {@link Source} these parameters work with
      */
-    public static interface ProducerParameters<S extends Source<S>> {
+    public static interface ProducerParameters<S extends Source> {
 
         /**
          * Save these parameters to node settings.

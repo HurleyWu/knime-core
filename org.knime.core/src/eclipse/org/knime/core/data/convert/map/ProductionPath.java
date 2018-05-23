@@ -4,6 +4,9 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.map.MappingFramework.CellValueProducer;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * A selection of {@link CellValueProducer} to {@link JavaToDataCellConverter} to write a certain value from
@@ -12,16 +15,16 @@ import org.knime.core.data.convert.map.MappingFramework.CellValueProducer;
  * @author Jonathan Hale
  */
 public class ProductionPath {
-    final JavaToDataCellConverterFactory<?> m_factory;
+    public final JavaToDataCellConverterFactory<?> m_factory;
 
-    final CellValueProducer<?, ?, ?> m_producer;
+    public final CellValueProducer<?, ?, ?> m_producer;
 
     /**
      * Constructor.
      *
      * @param f Factory of the converter used to extract a Java value out a DataCell.
      * @param c CellValueConsumer which accepts the Java value extracted by the converter and writes it to some
-     *            {@link Sink}.
+     *            {@link Destination}.
      */
     public ProductionPath(final JavaToDataCellConverterFactory<?> f, final CellValueProducer<?, ?, ?> c) {
         this.m_factory = f;
@@ -30,8 +33,8 @@ public class ProductionPath {
 
     @Override
     public String toString() {
-        return String.format("%s --(\"%s\")-> %s ---> %s Consumer", m_factory.getSourceType().getSimpleName(),
-            m_factory.getName(), m_factory.getDestinationType().getName(), m_producer.getClass().getSimpleName());
+        return String.format("%s ---> %s --(\"%s\")-> %s", m_producer.getIdentifier(), m_factory.getSourceType().getSimpleName(),
+            m_factory.getName(), m_factory.getDestinationType().getName());
     }
 
     @Override
@@ -70,5 +73,28 @@ public class ProductionPath {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Serialize to node settings.
+     *
+     * @param settings Settings to save to
+     */
+    void saveSettingsTo(final NodeSettingsWO settings) {
+        settings.addString("conversion_factory", m_factory.getIdentifier());
+        settings.addString("external_type", m_producer.getIdentifier());
+    }
+
+    /**
+     * Deserialize from node settings.
+     *
+     * @param settings Settings to load from
+     * @throws InvalidSettingsException If invalid settings are encountered.
+     */
+    void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        final String factoryId = settings.getString("conversion_factory", null);
+        final String externalType = settings.getString("external_type", null);
+
+        // TODO
     }
 }

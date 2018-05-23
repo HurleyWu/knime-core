@@ -7,21 +7,21 @@ import org.knime.core.data.convert.map.MappingFramework.CellValueConsumer;
 
 /**
  * A selection of {@link DataCellToJavaConverter} to {@link CellValueConsumer} to write a certain {@link DataValue} to a
- * {@link Sink}.
+ * {@link Destination}.
  *
  * @author Jonathan Hale
  */
 public class ConsumptionPath {
-    final DataCellToJavaConverterFactory<?, ?> m_factory;
+    public final DataCellToJavaConverterFactory<?, ?> m_factory;
 
-    final CellValueConsumer<?, ?, ?> m_consumer;
+    public final CellValueConsumer<?, ?, ?> m_consumer;
 
     /**
      * Constructor.
      *
      * @param factory Factory of the converter used to extract a Java value out a DataCell.
      * @param consumer CellValueConsumer which accepts the Java value extracted by the converter and writes it to some
-     *            {@link Sink}.
+     *            {@link Destination}.
      */
     public ConsumptionPath(final DataCellToJavaConverterFactory<?, ?> factory,
         final CellValueConsumer<?, ?, ?> consumer) {
@@ -31,8 +31,8 @@ public class ConsumptionPath {
 
     @Override
     public String toString() {
-        return String.format("%s --(\"%s\")-> %s ---> %s Consumer", m_factory.getSourceType().getSimpleName(),
-            m_factory.getName(), m_factory.getDestinationType().getSimpleName(), m_consumer.getClass().getSimpleName());
+        return String.format("%s --(\"%s\")-> %s ---> %s", m_factory.getSourceType().getSimpleName(),
+            m_factory.getName(), m_factory.getDestinationType().getSimpleName(), m_consumer.getIdentifier());
     }
 
     @Override
