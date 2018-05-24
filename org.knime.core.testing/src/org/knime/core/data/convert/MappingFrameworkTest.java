@@ -175,6 +175,7 @@ public class MappingFrameworkTest {
         final DataCellToJavaConverterFactory<? extends DataValue, String> stringFactory =
             DataCellToJavaConverterRegistry.getInstance().getConverterFactories(StringCell.TYPE, String.class).stream()
                 .findFirst().get();
+
         final ConsumptionPath pathA = new ConsumptionPath(intFactory, intConsumer);
         final ConsumptionPath pathB = new ConsumptionPath(intFactory, intConsumer);
         final ConsumptionPath pathC = new ConsumptionPath(stringFactory, intConsumer);
@@ -256,6 +257,7 @@ public class MappingFrameworkTest {
             c.h2oFrame.get(p.rowIndex)[p.columnIndex] = v;
         };
 
+        // TODO extension point
         MappingFramework.forDestinationType(H2ODestination.class) //
             .unregisterAllConsumers().registerConsumer(Integer.class, intConsumer) //
             .registerConsumer(Long.class, new SimpleCellValueConsumer<>("LONG", generalConsumer)) //
@@ -266,6 +268,7 @@ public class MappingFrameworkTest {
 
         assertEquals(intConsumer, MappingFramework.forDestinationType(H2ODestination.class).get(Integer.class, "INT"));
 
+        // TODO should be list as we have to guarantee deterministic order!
         final Collection<ConsumptionPath> paths =
             MappingFramework.forDestinationType(H2ODestination.class).getAvailableConsumptionPaths(IntCell.TYPE);
         assertEquals(5, paths.size());
@@ -275,11 +278,21 @@ public class MappingFrameworkTest {
         assertEquals(2, Stream.of(inTypes).filter(s -> s.equals("STR")).count());
         assertEquals(1, Stream.of(inTypes).filter(s -> s.equals("DOUBLE")).count());
 
+        // TODO save ID (-> mapping to java class?) or use java class! consistent to converters.
+        // TODO add human readable name for consumers. consistent to converters.
+        // TODO add saveToSettings loadFromSettings ConsumptionPath
+        // TODO later: deprecation mechanism?
+        // TODO later: priority mechanism (=deprecation?).
         final ConsumptionPath expectedPath = new ConsumptionPath(DataCellToJavaConverterRegistry.getInstance()
             .getConverterFactories(IntCell.TYPE, Integer.class).stream().findFirst().get(), intConsumer);
         assertTrue(paths.contains(expectedPath));
 
         assertNull(MappingFramework.forDestinationType(H2ODestination.class).get(ConsumptionPath.class, "INT"));
+
+        // TODO
+        // Assumption: RESULTSET is stateful...
+        expectedPath.map(Col, RESULTSET);
+        expectedPath.map(Col, RESULTSET);
 
         /* Some example input */
         final DefaultRow row =
